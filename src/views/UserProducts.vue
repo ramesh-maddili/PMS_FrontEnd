@@ -2,7 +2,7 @@
   <div class="product-container">
     <!-- Admin Form to Add/Update Product -->
     <div v-if="role === 'Admin'" class="form-box sticky-form">
-        <h2>📦 Product List</h2>
+        <h2> Product List</h2>
       <input ref="nameInput" v-model="newProduct.name" placeholder="Product Name" />
       <input v-model="newProduct.price" type="number" placeholder="Price (₹)" />
       <input v-model="newProduct.category" placeholder="Category" />
@@ -45,13 +45,13 @@ export default {
   },
   methods: {
     async getProducts() {
-      const res = await axios.get('/products')
+      const res = await axios.get('/products/getall')
       this.products = res.data
     },
     async addProduct() {
       const name = this.newProduct.name
       await axios.post('/products', this.newProduct)
-      alert(`✅ Product "${name}" added successfully!`)
+      alert(` Product "${name}" added successfully!`)
       this.newProduct = { name: '', price: '', category: '' }
       this.getProducts()
     },
@@ -65,15 +65,15 @@ export default {
         })
         this.newProduct = { name: '', price: '', category: '' }
         this.getProducts()
-        alert('✅ Product updated successfully!')
+        alert(' Product updated successfully!')
       } catch (err) {
-        console.error("❌ Update failed:", err.response?.data?.message || err.message)
+        console.error(" Update failed:", err.response?.data?.message || err.message)
       }
     },
     async deleteProduct(id) {
       const deletedProduct = this.products.find(p => p._id === id)
       await axios.delete(`/products/${id}`)
-      alert(`🗑️ Deleted "${deletedProduct?.name}"`)
+      alert(` Deleted "${deletedProduct?.name}"`)
       this.getProducts()
     },
     editProduct(product) {

@@ -1,6 +1,6 @@
 <template>
   <div class="summary-container">
-    <h2>📊 Product Summary by Category</h2>
+    <h2> Product Summary by Category</h2>
 
     <div class="filter-section">
       <label for="category">Filter by Category: </label>
@@ -19,7 +19,7 @@
       :key="item._id"
       class="summary-card"
     >
-      <h3>📁 {{ item._id }}</h3>
+      <h3> {{ item._id }}</h3>
       <ul>
         <li><strong>Total Products:</strong> {{ item.totalProducts }}</li>
         <li><strong>Average Price:</strong> ₹{{ item.avgPrice.toFixed(2) }}</li>
@@ -57,7 +57,7 @@ export default {
         const res = await axios.get(url);
         this.summary = res.data;
       } catch (err) {
-        console.error('❌ Summary fetch failed:', err.message);
+        console.error(' Summary fetch failed:', err.message);
       }
     }
   }
