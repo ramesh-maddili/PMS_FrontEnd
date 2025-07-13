@@ -6,48 +6,47 @@
 
       <span class="spacer"></span>
       <span class="user-info">
-       {{role}}
+        {{ role }}
       </span>
 
       <button @click="logout">Logout</button>
     </nav>
 
-    <!-- Only one router-view with key -->
     <router-view :key="$route.fullPath" />
   </div>
 </template>
 
 <script>
 export default {
-  name: 'App',
+  name: "App",
   data() {
     return {
-      role: localStorage.getItem('role')
-    }
+      role: null,
+    };
   },
   computed: {
     isAuthenticated() {
-      return !!localStorage.getItem('token')
-    }
+      return !!localStorage.getItem("token");
+    },
   },
-  watch: {
-    // Watch route changes to update role dynamically
-    '$route'() {
-      this.role = localStorage.getItem('role')
-    }
+  created() {
+    this.role = localStorage.getItem("role");
+
+    this.$root.$on("logged-in", () => {
+      this.role = localStorage.getItem("role");
+    });
   },
   methods: {
     logout() {
-      localStorage.clear()
-      this.role = null
-      this.$router.push('/login')
-    }
-  }
-}
+      localStorage.clear();
+      this.role = null;
+      this.$router.push("/login");
+    },
+  },
+};
 </script>
 
 <style>
-
 body {
   margin: 0;
   font-family: Arial, sans-serif;
@@ -65,8 +64,8 @@ nav {
   align-items: center;
   background-color: #2c3e50;
   padding: 10px 20px;
-  border-radius: 0; /* Remove radius if full width */
-  position: fixed; /* Fix it to top */
+  border-radius: 0;
+  position: fixed;
   top: 0;
   left: 0;
   right: 0;
@@ -88,7 +87,6 @@ nav .spacer {
   border-radius: 20px;
   font-size: 14px;
 }
-
 
 nav a {
   color: white;

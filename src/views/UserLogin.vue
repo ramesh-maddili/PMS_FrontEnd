@@ -4,6 +4,7 @@
       <h2>Login</h2>
       <form @submit.prevent="login">
         <input v-model="username" placeholder="Username" required /><br />
+        <input v-model="email" placeholder="email" required /><br />
         <input v-model="password" type="password" placeholder="Password" required /><br />
         <button>Login</button>
       </form>
@@ -13,32 +14,38 @@
 </template>
 
 <script>
-import axios from 'axios'
+import axios from "axios";
+
 export default {
-  name: 'UserLogin',
+  name: "UserLogin",
   data() {
     return {
-      username: '',
-      password: '',
-      error: ''
-    }
+      username: "",
+      password: "",
+      email: "",
+      error: "",
+    };
   },
   methods: {
     async login() {
       try {
-        const res = await axios.post('/login', {
+        const res = await axios.post("/login", {
           username: this.username,
-          password: this.password
-        })
-        localStorage.setItem('token', res.data.token)
-        localStorage.setItem('role', res.data.role)
-        this.$router.push('/products')
+          email: this.email,
+          password: this.password,
+        });
+
+        localStorage.setItem("token", res.data.token);
+        localStorage.setItem("refreshToken", res.data.refreshToken);
+        localStorage.setItem("role", res.data.role);
+        this.$root.$emit("logged-in");
+        this.$router.push("/products");
       } catch (err) {
-        this.error = 'Invalid credentials'
+        this.error = "Invalid credentials";
       }
-    }
-  }
-}
+    },
+  },
+};
 </script>
 
 <style scoped>

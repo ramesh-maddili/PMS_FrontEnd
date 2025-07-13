@@ -2,7 +2,7 @@
   <div class="product-container">
     <!-- Admin Form to Add/Update Product -->
     <div v-if="role === 'Admin'" class="form-box sticky-form">
-        <h2> Product List</h2>
+      <h2>Product List</h2>
       <input ref="nameInput" v-model="newProduct.name" placeholder="Product Name" />
       <input v-model="newProduct.price" type="number" placeholder="Price (₹)" />
       <input v-model="newProduct.category" placeholder="Category" />
@@ -16,7 +16,11 @@
 
     <!-- Product List -->
     <div v-for="product in products" :key="product._id" class="product-item">
-      <p><strong>{{ product.name }}</strong> - ₹{{ product.price }} ({{ product.category }})</p>
+      <p>
+        <strong>{{ product.name }}</strong> - ₹{{ product.price }} ({{
+          product.category
+        }})
+      </p>
 
       <div v-if="role === 'Admin'" class="action-buttons">
         <button class="edit" @click="editProduct(product)">Edit</button>
@@ -27,67 +31,126 @@
 </template>
 
 <script>
-import axios from 'axios'
+import axios from "axios";
+
 export default {
   data() {
     return {
       products: [],
       newProduct: {
-        name: '',
-        price: '',
-        category: ''
+        name: "",
+        price: "",
+        category: "",
       },
-      role: localStorage.getItem('role')
-    }
+    };
+  },
+  computed: {
+    role() {
+      return localStorage.getItem("role");
+    },
   },
   created() {
-    this.getProducts()
+    this.getProducts();
   },
   methods: {
     async getProducts() {
-      const res = await axios.get('/products/getall')
-      this.products = res.data
-    },
-    async addProduct() {
-      const name = this.newProduct.name
-      await axios.post('/products', this.newProduct)
-      alert(` Product "${name}" added successfully!`)
-      this.newProduct = { name: '', price: '', category: '' }
-      this.getProducts()
-    },
-    async updateProduct() {
-      if (!this.newProduct._id) return
       try {
-        await axios.put(`/products/${this.newProduct._id}`, {
-          name: this.newProduct.name,
-          price: this.newProduct.price,
-          category: this.newProduct.category
-        })
-        this.newProduct = { name: '', price: '', category: '' }
-        this.getProducts()
-        alert(' Product updated successfully!')
+        const token = localStorage.getItem("token");
+        const res = await axios.get("/products/getall", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        this.products = res.data;
       } catch (err) {
-        console.error(" Update failed:", err.response?.data?.message || err.message)
+        console.error("Get products failed:", err.response?.data?.message || err.message);
+        if (err.response?.status === 401) {
+          alert("Unauthorized. Please log in again.");
+        }
       }
     },
-    async deleteProduct(id) {
-      const deletedProduct = this.products.find(p => p._id === id)
-      await axios.delete(`/products/${id}`)
-      alert(` Deleted "${deletedProduct?.name}"`)
-      this.getProducts()
+
+    async addProduct() {
+      const { name, price, category } = this.newProduct;
+      const token = localStorage.getItem("token");
+
+      if (!name || !price || !category) {
+        alert("Please fill all fields before adding a product.");
+        return;
+      }
+
+      try {
+        await axios.post("/products/create", this.newProduct, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        alert(`Product "${name}" added successfully!`);
+        this.newProduct = { name: "", price: "", category: "" };
+        this.getProducts();
+      } catch (err) {
+        console.error("Add failed:", err.response?.data?.message || err.message);
+      }
     },
+
+    async updateProduct() {
+      if (!this.newProduct._id) return;
+      const token = localStorage.getItem("token");
+
+      try {
+        await axios.put(
+          `/products/${this.newProduct._id}`,
+          {
+            name: this.newProduct.name,
+            price: this.newProduct.price,
+            category: this.newProduct.category,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        alert("Product updated successfully!");
+        this.newProduct = { name: "", price: "", category: "" };
+        this.getProducts();
+      } catch (err) {
+        console.error("Update failed:", err.response?.data?.message || err.message);
+      }
+    },
+
+    async deleteProduct(id) {
+      const token = localStorage.getItem("token");
+      const deletedProduct = this.products.find((p) => p._id === id);
+
+      try {
+        await axios.delete(`/products/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        alert(`Deleted "${deletedProduct?.name}"`);
+        this.getProducts();
+      } catch (err) {
+        console.error("Delete failed:", err.response?.data?.message || err.message);
+      }
+    },
+
     editProduct(product) {
-  this.newProduct = { ...product }
-  this.$nextTick(() => {
-    this.$refs.nameInput?.focus()
-  })
-},
+      this.newProduct = { ...product };
+      this.$nextTick(() => {
+        this.$refs.nameInput?.focus();
+      });
+    },
 
     cancelEdit() {
-      this.newProduct = { name: '', price: '', category: '' }
-    }
-  }
-}
+      this.newProduct = { name: "", price: "", category: "" };
+    },
+  },
+};
 </script>
 
 <style scoped>
@@ -100,7 +163,6 @@ export default {
   border-bottom: 1px solid #ccc;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
 }
-
 
 .product-container {
   max-width: 600px;

@@ -14,18 +14,24 @@ const router = new Router({
     { path: '/login', component: Login },
     { path: '/products', component: Products },
     { path: '/summary', component: Summary },
-    { path: '*', component: NotFound } // catch-all route
+    { path: '*', component: NotFound }
   ]
 })
 
 // Route Guard
 router.beforeEach((to, from, next) => {
   const token = localStorage.getItem('token')
-  if (to.path !== '/login' && !token) {
-    next('/login')
-  } else {
-    next()
+  const role = localStorage.getItem('role')
+
+  if (!token && to.path !== '/login') {
+    return next('/login')
   }
+
+  if (to.path === '/summary' && role !== 'Admin') {
+    return next('/products') // or show unauthorized
+  }
+
+  next()
 })
 
 export default router
