@@ -1,12 +1,13 @@
 import Vue from 'vue';
 import App from './App.vue';
 import router from './router';
+import store from './store';
 import axios from 'axios';
 import {jwtDecode} from 'jwt-decode';
 
 Vue.config.productionTip = false;
 axios.defaults.baseURL = 'http://localhost:5000';
-
+// Attach token to every request
 axios.interceptors.request.use(config => {
   const token = localStorage.getItem('token');
   if (token) {
@@ -58,5 +59,6 @@ refreshTokenBeforeExpiry();
 
 new Vue({
   router,
+  store,  // 
   render: h => h(App)
 }).$mount('#app');
