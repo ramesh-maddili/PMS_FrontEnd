@@ -5,10 +5,7 @@
       <router-link v-if="role === 'Admin'" to="/summary">Summary</router-link>
 
       <span class="spacer"></span>
-      <span class="user-info">
-        {{ role }}
-      </span>
-
+      <span v-if="role" class="user-info">{{ role }}</span>
       <button @click="logout">Logout</button>
     </nav>
 
@@ -18,31 +15,44 @@
 
 <script>
 export default {
-  name: "App",
+  name: 'App',
   data() {
     return {
-      role: null,
+      role: localStorage.getItem('role') || null,
+      isLoggedIn: !!localStorage.getItem('token')
     };
   },
   computed: {
     isAuthenticated() {
-      return !!localStorage.getItem("token");
-    },
+      return this.isLoggedIn;
+    }
   },
-  created() {
-    this.role = localStorage.getItem("role");
-
-    this.$root.$on("logged-in", () => {
-      this.role = localStorage.getItem("role");
+  watch: {
+    $route() {
+      this.role = localStorage.getItem('role');
+      this.isLoggedIn = !!localStorage.getItem('token');
+    }
+  },
+  mounted() {
+    this.$root.$on('logged-in', () => {
+      this.role = localStorage.getItem('role');
+      this.isLoggedIn = true;
     });
   },
   methods: {
     logout() {
+      if (!this.isLoggedIn) return; // Prevent double logout
+
       localStorage.clear();
       this.role = null;
-      this.$router.push("/login");
-    },
-  },
+      this.isLoggedIn = false;
+
+      // Avoid navigation error if already on /login
+      if (this.$route.path !== '/login') {
+        this.$router.push('/login');
+      }
+    }
+  }
 };
 </script>
 

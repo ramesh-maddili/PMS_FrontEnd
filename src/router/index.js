@@ -10,6 +10,7 @@ Vue.use(Router)
 const router = new Router({
   mode: 'history',
   routes: [
+    {path: '/register', name: 'Register', component: () => import('../views/UserRegister.vue')},
     { path: '/', redirect: '/products' },
     { path: '/login', component: Login },
     { path: '/products', component: Products },
@@ -23,12 +24,19 @@ router.beforeEach((to, from, next) => {
   const token = localStorage.getItem('token')
   const role = localStorage.getItem('role')
 
-  if (!token && to.path !== '/login') {
+  // Skip guard for public pages
+  if (to.path === '/login' || to.path === '/register') {
+    return next()
+  }
+
+  // Require auth for other pages
+  if (!token) {
     return next('/login')
   }
 
+  // Restrict access to summary for non-admins
   if (to.path === '/summary' && role !== 'Admin') {
-    return next('/products') // or show unauthorized
+    return next('/products')
   }
 
   next()

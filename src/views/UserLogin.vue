@@ -3,7 +3,6 @@
     <div class="login-box">
       <h2>Login</h2>
       <form @submit.prevent="login">
-        <input v-model="username" placeholder="Username" required /><br />
         <input v-model="email" placeholder="email" required /><br />
         <input v-model="password" type="password" placeholder="Password" required /><br />
         <button>Login</button>
@@ -20,7 +19,6 @@ export default {
   name: "UserLogin",
   data() {
     return {
-      username: "",
       password: "",
       email: "",
       error: "",
@@ -30,7 +28,6 @@ export default {
     async login() {
       try {
         const res = await axios.post("/login", {
-          username: this.username,
           email: this.email,
           password: this.password,
         });
@@ -38,8 +35,9 @@ export default {
         localStorage.setItem("token", res.data.token);
         localStorage.setItem("refreshToken", res.data.refreshToken);
         localStorage.setItem("role", res.data.role);
-        this.$root.$emit("logged-in");
-        this.$router.push("/products");
+        //this.$root.$emit("logged-in");
+        //this.$router.push("/products");
+        window.location.href = '/products';
       } catch (err) {
         this.error = "Invalid credentials";
       }
