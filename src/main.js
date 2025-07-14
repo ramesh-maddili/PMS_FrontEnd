@@ -1,90 +1,62 @@
-import Vue from 'vue'
-import App from './App.vue'
-import router from './router'
-import axios from 'axios'
+import Vue from 'vue';
+import App from './App.vue';
+import router from './router';
+import axios from 'axios';
+import {jwtDecode} from 'jwt-decode';
 
-Vue.config.productionTip = false
+Vue.config.productionTip = false;
+axios.defaults.baseURL = 'http://localhost:5000';
 
-axios.defaults.baseURL = 'http://localhost:5000'
-
-// Request Interceptor - Attach access token
 axios.interceptors.request.use(config => {
-  const token = localStorage.getItem('token')
+  const token = localStorage.getItem('token');
   if (token) {
-    config.headers.Authorization = `Bearer ${token}`
+    config.headers.Authorization = `Bearer ${token}`;
   }
-  return config
-})
+  return config;
+});
 
-// Flag to avoid infinite loops
-let isRefreshing = false
-let failedQueue = []
-
-const processQueue = (error, token = null) => {
-  failedQueue.forEach(prom => {
-    if (error) {
-      prom.reject(error)
-    } else {
-      prom.resolve(token)
-    }
-  })
-  failedQueue = []
+// Function to decode token and get expiry time
+function getTokenExpiry(token) {
+  const decoded = jwtDecode(token);
+  return decoded.exp * 1000; // convert to milliseconds
 }
 
-// Response Interceptor - Auto-refresh token on 401
-axios.interceptors.response.use(
-  response => response,
-  async error => {
-    const originalRequest = error.config
+// Refresh token logic
+async function refreshTokenBeforeExpiry() {
+  const token = localStorage.getItem('token');
+  if (!token) return;
 
-    // If 401 and request hasn't been retried yet
-    if (
-      error.response?.status === 401 &&
-      !originalRequest._retry &&
-      localStorage.getItem('refreshToken')
-    ) {
-      originalRequest._retry = true
+  const expiryTime = getTokenExpiry(token);
+  const now = Date.now();
+  const refreshThreshold = 5 * 60 * 1000; // 5 minutes
+  const timeToRefresh = expiryTime - now - refreshThreshold;
 
-      if (isRefreshing) {
-        return new Promise((resolve, reject) => {
-          failedQueue.push({ resolve, reject })
-        }).then(token => {
-          originalRequest.headers.Authorization = `Bearer ${token}`
-          return axios(originalRequest)
-        })
-      }
-
-      isRefreshing = true
-
-      try {
-        const res = await axios.post('/refresh', {
-          refreshToken: localStorage.getItem('refreshToken')
-        })
-
-        const newAccessToken = res.data.token
-        localStorage.setItem('token', newAccessToken)
-        axios.defaults.headers.common.Authorization = `Bearer ${newAccessToken}`
-
-        processQueue(null, newAccessToken)
-        return axios(originalRequest)
-      } catch (refreshError) {
-        processQueue(refreshError, null)
-        localStorage.clear()
-        router.push('/login')
-        return Promise.reject(refreshError)
-      } finally {
-        isRefreshing = false
-      }
-    }
-
-    return Promise.reject(error)
+  if (timeToRefresh > 0) {
+    setTimeout(() => refreshAndReschedule(), timeToRefresh);
+  } else {
+    refreshAndReschedule(); // immediate refresh if already near expiry
   }
-)
 
-// Make axios available globally
-Vue.prototype.$http = axios
+  async function refreshAndReschedule() {
+    try {
+      const refreshToken = localStorage.getItem('refreshToken');
+      const response = await axios.post('/refresh-token', { refreshToken });
+      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('refreshToken', response.data.refreshToken);
+      console.log('Token refreshed automatically');
+      refreshTokenBeforeExpiry(); // Schedule again
+    } catch (err) {
+      console.error('Auto refresh failed', err.message);
+      localStorage.clear();
+      window.location = '/login';
+    }
+  }
+}
+
+// Call the function on app startup
+refreshTokenBeforeExpiry();
 
 new Vue({
   router,
   render: h => h(App)
-}).$mount('#app')
+}).$mount('#app');
