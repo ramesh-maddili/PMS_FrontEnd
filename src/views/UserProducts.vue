@@ -11,7 +11,14 @@
         <button class="cancel" @click="cancelEdit">Cancel</button>
       </div>
     </div>
-
+    <div style="display: flex; justify-content: flex-end; margin-top: 10px;">
+  <input
+    type="text"
+    v-model="searchText"
+    placeholder="Search product..."
+    class="search-input"
+  />
+</div>
     <!-- Product Cards -->
     <div class="product-grid">
       <div v-for="product in paginatedProducts" :key="product._id" class="product-card">
@@ -43,21 +50,27 @@ export default {
     products: [],
     newProduct: { name: "", price: "", category: "" },
     currentPage: 1,
-    perPage: 6
+    perPage: 6,
+    searchText: "",
   };
 },
 computed: {
   role() {
     return localStorage.getItem("role");
   },
-  paginatedProducts() {
-    const start = (this.currentPage - 1) * this.perPage;
-    return this.products.slice(start, start + this.perPage);
+  filteredProducts() {
+    const text = this.searchText.trim().toLowerCase();
+    return this.products.filter(p => p.name.toLowerCase().includes(text));
   },
   totalPages() {
-    return Math.ceil(this.products.length / this.perPage);
+    return Math.ceil(this.filteredProducts.length / this.perPage);
+  },
+  paginatedProducts() {
+    const start = (this.currentPage - 1) * this.perPage;
+    return this.filteredProducts.slice(start, start + this.perPage);
   }
 },
+
  created() {
   this.getProducts();
 },
@@ -269,5 +282,18 @@ button:hover {
 .pagination button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+.search-input {
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+  width: 240px;
+  transition: border-color 0.3s ease;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #3498db;
 }
 </style>
