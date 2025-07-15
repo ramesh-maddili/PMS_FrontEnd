@@ -1,32 +1,36 @@
 <template>
-  <div class="product-container">
-    <!-- Admin Form to Add/Update Product -->
+  <div class="product-container"><br/>
     <div v-if="role === 'Admin'" class="form-box sticky-form">
-      <h2>Product List</h2>
+      <h2>Add / Update Product</h2>
       <input ref="nameInput" v-model="newProduct.name" placeholder="Product Name" />
       <input v-model="newProduct.price" type="number" placeholder="Price (₹)" />
       <input v-model="newProduct.category" placeholder="Category" />
-
       <div class="button-group">
         <button v-if="!newProduct._id" @click="addProduct">Add Product</button>
-        <button v-else @click="updateProduct">Update Product</button>
+        <button v-else @click="updateProduct">Update</button>
         <button class="cancel" @click="cancelEdit">Cancel</button>
       </div>
     </div>
 
-    <!-- Product List -->
-    <div v-for="product in products" :key="product._id" class="product-item">
-      <p>
-        <strong>{{ product.name }}</strong> - ₹{{ product.price }} ({{
-          product.category
-        }})
-      </p>
-
-      <div v-if="role === 'Admin'" class="action-buttons">
-        <button class="edit" @click="editProduct(product)">Edit</button>
-        <button class="delete" @click="deleteProduct(product._id)">Delete</button>
+    <!-- Product Cards -->
+    <div class="product-grid">
+      <div v-for="product in paginatedProducts" :key="product._id" class="product-card">
+        <p><strong>{{ product.name }}</strong></p>
+        <p>₹{{ product.price }} | {{ product.category }}</p>
+        <div v-if="role === 'Admin'" class="action-buttons">
+          <button class="edit" @click="editProduct(product)">Edit</button>
+          <button class="delete" @click="deleteProduct(product._id)">Delete</button>
+        </div>
       </div>
     </div>
+
+    <!-- Pagination Controls -->
+    <div class="pagination">
+      <button @click="prevPage" :disabled="currentPage === 1">⏮ Prev</button>
+      <span>Page {{ currentPage }} of {{ totalPages }}</span>
+      <button @click="nextPage" :disabled="currentPage === totalPages">Next ⏭</button>
+    </div>
+
   </div>
 </template>
 
@@ -34,24 +38,30 @@
 import axios from "axios";
 
 export default {
-  data() {
-    return {
-      products: [],
-      newProduct: {
-        name: "",
-        price: "",
-        category: "",
-      },
-    };
+ data() {
+  return {
+    products: [],
+    newProduct: { name: "", price: "", category: "" },
+    currentPage: 1,
+    perPage: 6
+  };
+},
+computed: {
+  role() {
+    return localStorage.getItem("role");
   },
-  computed: {
-    role() {
-      return localStorage.getItem("role");
-    },
+  paginatedProducts() {
+    const start = (this.currentPage - 1) * this.perPage;
+    return this.products.slice(start, start + this.perPage);
   },
-  created() {
-    this.getProducts();
-  },
+  totalPages() {
+    return Math.ceil(this.products.length / this.perPage);
+  }
+},
+ created() {
+  this.getProducts();
+},
+
   methods: {
     async getProducts() {
       try {
@@ -149,83 +159,115 @@ export default {
     cancelEdit() {
       this.newProduct = { name: "", price: "", category: "" };
     },
+    nextPage() {
+    if (this.currentPage < this.totalPages) {
+      this.currentPage++;
+      this.scrollToTop();
+    }
   },
-};
+  prevPage() {
+    if (this.currentPage > 1) {
+      this.currentPage--;
+      this.scrollToTop();
+    }
+  },
+  scrollToTop() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  }
+  }
+
 </script>
 
 <style scoped>
-.sticky-form {
-  position: sticky;
-  top: 50px; /* adjust as per your navbar height */
-  z-index: 1000;
-  background-color: #fff;
-  padding: 15px;
-  border-bottom: 1px solid #ccc;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+.product-container {
+  max-width: 900px;
+  margin: auto;
+  background: #fdfdfd;
+  padding: 25px;
+  border-radius: 15px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
 }
 
-.product-container {
-  max-width: 600px;
-  margin: auto;
-  background: #ffffff;
-  padding: 25px;
-  border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+h2 {
+  color: #2c3e50;
+  margin-bottom: 15px;
 }
 
 .form-box input {
-  display: block;
   width: 100%;
   padding: 10px;
-  margin-top: 10px;
-  margin-bottom: 5px;
+  margin-top: 8px;
+  margin-bottom: 12px;
   border: 1px solid #ccc;
   border-radius: 6px;
   box-sizing: border-box;
-}
-
-.button-group {
-  margin-top: 10px;
+  font-size: 15px;
 }
 
 .button-group button,
-.action-buttons button {
+.action-buttons button,
+.pagination button {
   margin-right: 10px;
-  margin-top: 10px;
   padding: 8px 14px;
   border: none;
   border-radius: 5px;
   cursor: pointer;
   font-weight: bold;
+  transition: 0.3s;
 }
 
 button {
-  background-color: #2ecc71;
+  background-color: #27ae60;
   color: white;
 }
 
+button:hover {
+  background-color: #219150;
+}
+
 .cancel {
-  background-color: #bdc3c7;
-  color: #2c3e50;
+  background-color: #95a5a6;
 }
 
 .edit {
   background-color: #3498db;
-  color: white;
 }
 
 .delete {
   background-color: #e74c3c;
-  color: white;
 }
 
-.product-item {
-  border-bottom: 1px solid #eee;
-  padding: 15px 0;
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
 }
 
-.product-item p {
-  margin: 0;
-  font-size: 16px;
+.product-card {
+  background-color: #ffffff;
+  border-radius: 10px;
+  padding: 15px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.07);
+  transition: transform 0.3s;
+}
+
+.product-card:hover {
+  transform: translateY(-4px);
+}
+
+.product-card p {
+  margin: 6px 0;
+}
+
+.pagination {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.pagination button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 </style>
