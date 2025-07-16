@@ -35,8 +35,6 @@ export default {
         localStorage.setItem("token", res.data.token);
         localStorage.setItem("refreshToken", res.data.refreshToken);
         localStorage.setItem("role", res.data.role);
-        //this.$root.$emit("logged-in");
-        //this.$router.push("/products");
         window.location.href = '/products';
       } catch (err) {
         this.error = "Invalid credentials";
