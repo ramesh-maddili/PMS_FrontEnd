@@ -64,13 +64,13 @@ export default {
   const search = this.$route.query.search || '';
   this.searchText = search;
   this.getProducts(page, search);
-  this.updateFromRoute();
-},
+      this.updateFromRoute();
+    },
 watch: {
   '$route.query.search'(newSearch) {
     this.searchText = newSearch || '';
     this.getProducts(this.currentPage, newSearch);
-  },
+    },
   '$route.query.page'(newPage) {
     const page = parseInt(newPage) || 1;
     this.currentPage = page;
@@ -78,16 +78,17 @@ watch: {
   }
 },
 
-
   methods: {
-    updateFromRoute() {
+  updateFromRoute() {
     const page = parseInt(this.$route.query.page) || 1;
     const search = this.$route.query.search || '';
     this.searchText = search;
     this.getProducts(page, search);
+    
   },
   methods: {
   onSearchInput() {
+    // On typing/searching — reset to page 1 with search query
     this.$router.push({
       path: '/products',
       query: { search: this.searchText, page: 1 }
@@ -95,29 +96,29 @@ watch: {
   }
   },
     async getProducts(page = 1, search ='') {
-      try {
-        const token = localStorage.getItem("token");
+  try {
+    const token = localStorage.getItem("token");
         //const currentQueryPage = parseInt(this.$route.query.page) || 1;
     // if (currentQueryPage !== page) {
     //   this.$router.push({ path: "/products", query: { page } });
     // }
-        const res = await axios.get(`/products/getall?page=${page}&search=${search}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+    const res = await axios.get(`/products/getall?page=${page}&search=${search}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
-        this.products = res.data.data;
-        this.totalPages = res.data.totalPages;
-        this.currentPage = res.data.currentPage;
+    this.products = res.data.data;
+    this.totalPages = res.data.totalPages;
+    this.currentPage = res.data.currentPage;
 
-      } catch (err) {
-        console.error("Get products failed:", err.response?.data?.message || err.message);
-        if (err.response?.status === 401) {
-          alert("Unauthorized. Please log in again.");
-        }
-      }
-    },
+  } catch (err) {
+    console.error("Get products failed:", err.response?.data?.message || err.message);
+    if (err.response?.status === 401) {
+      alert("Unauthorized. Please log in again.");
+    }
+  }
+  },
 
     async addProduct() {
       const { name, price, category } = this.newProduct;

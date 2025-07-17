@@ -3,7 +3,7 @@
     <div class="login-box">
       <h2>Login</h2>
       <form @submit.prevent="login">
-        <input v-model="email" placeholder="email" required /><br />
+        <input v-model="identifier" type="text" placeholder="Email or Username" required /><br />
         <input v-model="password" type="password" placeholder="Password" required /><br />
         <button>Login</button>
       </form>
@@ -28,7 +28,7 @@ export default {
     async login() {
       try {
         const res = await axios.post("/login", {
-          email: this.email,
+          identifier: this.identifier,
           password: this.password,
         });
 

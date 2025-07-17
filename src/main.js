@@ -29,7 +29,7 @@ async function refreshTokenBeforeExpiry() {
 
   const expiryTime = getTokenExpiry(token);
   const now = Date.now();
-  const refreshThreshold = 5 * 60 * 1000; // 5 minutes
+  const refreshThreshold = 5 * 60 * 1000; // 5 minutes before expiry
   const timeToRefresh = expiryTime - now - refreshThreshold;
 
   if (timeToRefresh > 0) {
